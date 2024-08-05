@@ -3,12 +3,12 @@ package test
 import (
 	"sort"
 
-	"github.com/cerc-io/eth-testing/chaindata/small2"
+	"github.com/cerc-io/eth-testing/chains/premerge2"
 	"github.com/ethereum/go-ethereum/common"
 )
 
 func init() {
-	for _, path := range small2.Block1_StateNodeLeafKeys {
+	for _, path := range premerge2.Block1_StateNodeLeafKeys {
 		hex := common.BytesToHash(path).String()
 		ChainA_Block1_StateNodeLeafKeys = append(ChainA_Block1_StateNodeLeafKeys, hex)
 	}
@@ -19,7 +19,7 @@ func init() {
 }
 
 var (
-	ChainA = small2.ChainData
+	ChainA = premerge2.ChainData
 
 	ChainA_Block1_StateNodeLeafKeys []string
 	// ChainA_Block1_StateNodeLeafKeys = small2.Block1_StateNodeLeafKeys

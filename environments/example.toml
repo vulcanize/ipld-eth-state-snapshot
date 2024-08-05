@@ -5,7 +5,7 @@
     user     = "vdbm"
     password = "password"
 
-[leveldb]
+[ethdb]
     path = "/Users/user/go/src/github.com/cerc-io/ipld-eth-state-snapshot/fixture/chain2data"
     ancient = "/Users/user/go/src/github.com/cerc-io/ipld-eth-state-snapshot/fixture/chain2data/ancient"
 

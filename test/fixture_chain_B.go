@@ -3,7 +3,7 @@ package test
 import (
 	"math/big"
 
-	"github.com/cerc-io/eth-testing/chaindata/small"
+	"github.com/cerc-io/eth-testing/chains/premerge1"
 	"github.com/cerc-io/plugeth-statediff/indexer/ipld"
 	"github.com/cerc-io/plugeth-statediff/indexer/models"
 	"github.com/ethereum/go-ethereum/common"
@@ -12,7 +12,7 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 )
 
-var ChainB = small.ChainData
+var ChainB = premerge1.ChainData
 
 var ChainB_block1_Header = types.Header{
 	ParentHash:  common.HexToHash("0x6341fd3daf94b748c72ced5a5b26028f2474f5f00d824504e4fa37a75767e177"),

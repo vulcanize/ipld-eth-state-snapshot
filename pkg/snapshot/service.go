@@ -56,16 +56,15 @@ type Service struct {
 	recoveryFile string
 }
 
-func NewLevelDB(con *EthConfig) (ethdb.Database, error) {
-	kvdb, err := rawdb.NewLevelDBDatabase(con.LevelDBPath, 1024, 256, "ipld-eth-state-snapshot", true)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect LevelDB: %s", err)
-	}
-	edb, err := rawdb.NewDatabaseWithFreezer(kvdb, con.AncientDBPath, "ipld-eth-state-snapshot", true)
-	if err != nil {
-		return nil, fmt.Errorf("failed to connect LevelDB freezer: %s", err)
-	}
-	return edb, nil
+func NewEthDB(con *EthDBConfig) (ethdb.Database, error) {
+	return rawdb.Open(rawdb.OpenOptions{
+		Directory:         con.DBPath,
+		AncientsDirectory: con.AncientDBPath,
+		Namespace:         "ipld-eth-state-snapshot",
+		Cache:             1024,
+		Handles:           256,
+		ReadOnly:          true,
+	})
 }
 
 // NewSnapshotService creates Service.
@@ -140,7 +139,7 @@ func (s *Service) CreateSnapshot(params SnapshotParams) error {
 	sdparams.ComputeWatchedAddressesLeafPaths()
 	builder := statediff.NewBuilder(adapt.GethStateView(s.stateDB))
 	builder.SetSubtrieWorkers(params.Workers)
-	if err = builder.WriteStateSnapshot(header.Root, sdparams, nodeSink, ipldSink, tr); err != nil {
+	if err = builder.WriteStateSnapshot(ctx, header.Root, sdparams, nodeSink, ipldSink, tr); err != nil {
 		return err
 	}
 

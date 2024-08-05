@@ -30,7 +30,7 @@ import (
 // stateSnapshotCmd represents the stateSnapshot command
 var stateSnapshotCmd = &cobra.Command{
 	Use:   "stateSnapshot",
-	Short: "Extract the entire Ethereum state from leveldb and publish into PG-IPFS",
+	Short: "Extract the entire Ethereum state from Ethdb and publish into PG-IPFS",
 	Long: `Usage
 
 ./ipld-eth-state-snapshot stateSnapshot --config={path to toml config file}`,
@@ -47,9 +47,9 @@ func stateSnapshot() {
 	if err != nil {
 		logWithCommand.Fatalf("unable to initialize config: %v", err)
 	}
-	logWithCommand.Infof("opening levelDB and ancient data at %s and %s",
-		config.Eth.LevelDBPath, config.Eth.AncientDBPath)
-	edb, err := snapshot.NewLevelDB(config.Eth)
+	logWithCommand.Infof("opening ethdb and ancient data at %s and %s",
+		config.Eth.DBPath, config.Eth.AncientDBPath)
+	edb, err := snapshot.NewEthDB(config.Eth)
 	if err != nil {
 		logWithCommand.Fatal(err)
 	}
@@ -99,8 +99,8 @@ func stateSnapshot() {
 func init() {
 	rootCmd.AddCommand(stateSnapshotCmd)
 
-	stateSnapshotCmd.PersistentFlags().String(snapshot.LEVELDB_PATH_CLI, "", "path to primary datastore")
-	stateSnapshotCmd.PersistentFlags().String(snapshot.LEVELDB_ANCIENT_CLI, "", "path to ancient datastore")
+	stateSnapshotCmd.PersistentFlags().String(snapshot.ETHDB_PATH_CLI, "", "path to primary datastore")
+	stateSnapshotCmd.PersistentFlags().String(snapshot.ETHDB_ANCIENT_CLI, "", "path to ancient datastore")
 	stateSnapshotCmd.PersistentFlags().String(snapshot.SNAPSHOT_BLOCK_HEIGHT_CLI, "", "block height to extract state at")
 	stateSnapshotCmd.PersistentFlags().Int(snapshot.SNAPSHOT_WORKERS_CLI, 1, "number of concurrent workers to use")
 	stateSnapshotCmd.PersistentFlags().String(snapshot.SNAPSHOT_RECOVERY_FILE_CLI, "", "file to recover from a previous iteration")
@@ -108,8 +108,8 @@ func init() {
 	stateSnapshotCmd.PersistentFlags().String(snapshot.FILE_OUTPUT_DIR_CLI, "", "directory for writing ouput to while operating in 'file' mode")
 	stateSnapshotCmd.PersistentFlags().StringArray(snapshot.SNAPSHOT_ACCOUNTS_CLI, nil, "list of account addresses to limit snapshot to")
 
-	viper.BindPFlag(snapshot.LEVELDB_PATH_TOML, stateSnapshotCmd.PersistentFlags().Lookup(snapshot.LEVELDB_PATH_CLI))
-	viper.BindPFlag(snapshot.LEVELDB_ANCIENT_TOML, stateSnapshotCmd.PersistentFlags().Lookup(snapshot.LEVELDB_ANCIENT_CLI))
+	viper.BindPFlag(snapshot.ETHDB_PATH_TOML, stateSnapshotCmd.PersistentFlags().Lookup(snapshot.ETHDB_PATH_CLI))
+	viper.BindPFlag(snapshot.ETHDB_ANCIENT_TOML, stateSnapshotCmd.PersistentFlags().Lookup(snapshot.ETHDB_ANCIENT_CLI))
 	viper.BindPFlag(snapshot.SNAPSHOT_BLOCK_HEIGHT_TOML, stateSnapshotCmd.PersistentFlags().Lookup(snapshot.SNAPSHOT_BLOCK_HEIGHT_CLI))
 	viper.BindPFlag(snapshot.SNAPSHOT_WORKERS_TOML, stateSnapshotCmd.PersistentFlags().Lookup(snapshot.SNAPSHOT_WORKERS_CLI))
 	viper.BindPFlag(snapshot.SNAPSHOT_RECOVERY_FILE_TOML, stateSnapshotCmd.PersistentFlags().Lookup(snapshot.SNAPSHOT_RECOVERY_FILE_CLI))

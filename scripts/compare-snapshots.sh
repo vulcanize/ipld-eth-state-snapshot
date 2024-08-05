@@ -2,13 +2,13 @@
 # Compare the full snapshot output from two versions of the service
 #
 # Usage: compare-versions.sh [-d <output-dir>] <binary-A> <binary-B>
-#
+
 # Configure the input data using environment vars.
 (
   set -u
   : $SNAPSHOT_BLOCK_HEIGHT
-  : $LEVELDB_PATH
-  : $LEVELDB_ANCIENT
+  : $ETHDB_PATH
+  : $ETHDB_ANCIENT
   : $ETH_GENESIS_BLOCK
 )
 

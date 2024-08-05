@@ -3,7 +3,7 @@ services:
     restart: on-failure
     depends_on:
       - ipld-eth-db
-    image: git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:v5.0.5-alpha
+    image: git.vdb.to/cerc-io/ipld-eth-db/ipld-eth-db:v5.3.0-alpha
     environment:
       DATABASE_USER: "vdbm"
       DATABASE_NAME: "cerc_testing"
@@ -23,3 +23,8 @@ services:
       - 0.0.0.0:8077:5432
     volumes:
       - /tmp:/tmp
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "vdbm"]
+      interval: 2s
+      timeout: 1s
+      retries: 3

@@ -8,16 +8,23 @@ on:
       - main
 
 env:
-  # Needed until we can incorporate docker startup into the executor container
-  DOCKER_HOST: unix:///var/run/dind.sock
   CANONICAL_VERSION: v5.0.4-alpha
+  ETH_TESTING_REF: v0.5.1
 
 jobs:
-  tests:
-    name: Run unit and integration tests
+  build:
+    name: Build Docker image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - name: Build docker image
+        run: docker build .
+
+  unit-test:
+    name: Run unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-go@v3
         with:
           go-version-file: go.mod
@@ -27,21 +34,27 @@ jobs:
         with:
           repository: cerc-io/eth-testing
           path: ./fixtures
-          ref: v0.3.1
-      - name: Configure Gitea access
-        env:
-          TOKEN: ${{ secrets.CICD_REPO_TOKEN }}
-        run: |
-          git config --global url."https://$TOKEN:@git.vdb.to/".insteadOf https://git.vdb.to/
-      - name: Build package
-        run: go build .
+          ref: ${{ env.ETH_TESTING_REF }}
       - name: Run unit tests
         run: make test
 
-      - name: Run dockerd
-        run: |
-          dockerd -H $DOCKER_HOST --userland-proxy=false &
-          sleep 5
+  integration-test:
+    name: Run integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v3
+        with:
+          go-version-file: go.mod
+          check-latest: true
+      - name: Install test fixtures
+        uses: actions/checkout@v3
+        with:
+          repository: cerc-io/eth-testing
+          path: ./fixtures
+          ref: ${{ env.ETH_TESTING_REF }}
+      - name: Build package
+        run: go build .
       - name: Run DB container
         run: docker compose -f test/compose.yml up --wait
 
@@ -50,17 +63,19 @@ jobs:
       - name: Run basic integration test
         env:
           SNAPSHOT_MODE: postgres
-          SNAPSHOT_BLOCK_HEIGHT: 32
-          LEVELDB_PATH: ./fixtures/chaindata/_data/small
-          LEVELDB_ANCIENT: ./fixtures/chaindata/_data/small/ancient
-          ETH_GENESIS_BLOCK: "0x37cbb63c7150a7b60f2878433963ed8ba7e5f82fb2683ec7a945c974e1cf4e05"
+          ETHDB_PATH: ./fixtures/chains/data/postmerge1/geth/chaindata
+          ETH_GENESIS_BLOCK: 0x66ef6002e201cfdb23bd3f615fcf41e59d8382055e5a836f8d4c2af0d484647c
+          SNAPSHOT_BLOCK_HEIGHT: 170
         run: |
           until
               ready_query='select max(version_id) from goose_db_version;'
               version=$(docker exec -e PGPASSWORD=password test-ipld-eth-db-1 \
                   psql -tA cerc_testing -U vdbm -c "$ready_query")
-              [[ "$version" -ge 18 ]]
-          do sleep 1; done
+              [[ "$version" -ge 21 ]]
+          do
+            echo "Waiting for ipld-eth-db..."
+            sleep 3
+          done
 
           ./ipld-eth-state-snapshot --config test/ci-config.toml stateSnapshot
 
@@ -71,11 +86,14 @@ jobs:
           }
           set -x
           [[ "$(count_results eth.header_cids)" = 1 ]]
-          [[ "$(count_results eth.state_cids)" = 5 ]]
-          [[ "$(count_results eth.storage_cids)" = 13 ]]
+          [[ "$(count_results eth.state_cids)" = 264 ]]
+          [[ "$(count_results eth.storage_cids)" = 371 ]]
 
   compliance-test:
-    name: Run compliance tests
+    name: Run compliance tests (disabled)
+    # Schema has been updated, so compliance tests are disabled until we have a meaningful way to
+    # compare to previous results.
+    if: false
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -90,12 +108,7 @@ jobs:
         with:
           repository: cerc-io/eth-testing
           path: ./fixtures
-          ref: v0.3.1
-      - name: Configure Gitea access
-        env:
-          TOKEN: ${{ secrets.CICD_REPO_TOKEN }}
-        run: |
-          git config --global url."https://$TOKEN:@git.vdb.to/".insteadOf https://git.vdb.to/
+          ref: ${{ env.ETH_TESTING_REF }}
       - name: Build current version
         working-directory: ./ipld-eth-state-snapshot
         run: go build -o ../snapshot-current .
@@ -109,25 +122,21 @@ jobs:
         working-directory: ./ipld-eth-state-snapshot-canonical
         run: go build -o ../snapshot-canonical .
 
-      - name: Run dockerd
-        run: |
-          dockerd -H $DOCKER_HOST --userland-proxy=false &
-          sleep 5
       - name: Run DB container
         working-directory: ./ipld-eth-state-snapshot
         run: docker compose -f test/compose.yml up --wait
       - name: Compare snapshot output
         env:
           SNAPSHOT_BLOCK_HEIGHT: 200
-          LEVELDB_PATH: ./fixtures/chaindata/_data/small2
-          LEVELDB_ANCIENT: ./fixtures/chaindata/_data/small2/ancient
+          ETHDB_PATH: ./fixtures/chains/data/premerge2/geth/chaindata
+          ETHDB_ANCIENT: ./fixtures/chains/data/premerge2/geth/chaindata/ancient
           ETH_GENESIS_BLOCK: "0x8a3c7cddacbd1ab4ec1b03805fa2a287f3a75e43d87f4f987fcc399f5c042614"
         run: |
           until
               ready_query='select max(version_id) from goose_db_version;'
               version=$(docker exec -e PGPASSWORD=password test-ipld-eth-db-1 \
                   psql -tA cerc_testing -U vdbm -c "$ready_query")
-              [[ "$version" -ge 18 ]]
+              [[ "$version" -ge 21 ]]
           do sleep 1; done
 
           ./ipld-eth-state-snapshot/scripts/compare-snapshots.sh \

@@ -20,4 +20,4 @@
     nodeID       = "test-node"
     networkID    = "test-network"
     chainID      = 1
-    genesisBlock = "0x37cbb63c7150a7b60f2878433963ed8ba7e5f82fb2683ec7a945c974e1cf4e05"
+    genesisBlock = ""

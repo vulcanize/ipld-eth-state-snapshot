@@ -34,8 +34,8 @@ const (
 
 	FILE_OUTPUT_DIR = "FILE_OUTPUT_DIR"
 
-	LEVELDB_ANCIENT = "LEVELDB_ANCIENT"
-	LEVELDB_PATH    = "LEVELDB_PATH"
+	ETHDB_ANCIENT = "ETHDB_ANCIENT"
+	ETHDB_PATH    = "ETHDB_PATH"
 
 	ETH_CLIENT_NAME   = "ETH_CLIENT_NAME"
 	ETH_GENESIS_BLOCK = "ETH_GENESIS_BLOCK"
@@ -72,8 +72,8 @@ const (
 
 	FILE_OUTPUT_DIR_TOML = "file.outputDir"
 
-	LEVELDB_ANCIENT_TOML = "leveldb.ancient"
-	LEVELDB_PATH_TOML    = "leveldb.path"
+	ETHDB_ANCIENT_TOML = "ethdb.ancient"
+	ETHDB_PATH_TOML    = "ethdb.path"
 
 	ETH_CLIENT_NAME_TOML   = "ethereum.clientName"
 	ETH_GENESIS_BLOCK_TOML = "ethereum.genesisBlock"
@@ -110,8 +110,8 @@ const (
 
 	FILE_OUTPUT_DIR_CLI = "output-dir"
 
-	LEVELDB_ANCIENT_CLI = "ancient-path"
-	LEVELDB_PATH_CLI    = "leveldb-path"
+	ETHDB_ANCIENT_CLI = "ancient-path"
+	ETHDB_PATH_CLI    = "ethdb-path"
 
 	ETH_CLIENT_NAME_CLI   = "ethereum-client-name"
 	ETH_GENESIS_BLOCK_CLI = "ethereum-genesis-block"

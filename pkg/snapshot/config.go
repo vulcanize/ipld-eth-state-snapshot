@@ -41,15 +41,15 @@ const (
 
 // Config contains params for both databases the service uses
 type Config struct {
-	Eth     *EthConfig
+	Eth     *EthDBConfig
 	DB      *DBConfig
 	File    *FileConfig
 	Service *ServiceConfig
 }
 
-// EthConfig is config parameters for the chain.
-type EthConfig struct {
-	LevelDBPath   string
+// EthDBConfig is config parameters for the chain DB.
+type EthDBConfig struct {
+	DBPath        string
 	AncientDBPath string
 	NodeInfo      ethNode.Info
 }
@@ -67,7 +67,7 @@ type ServiceConfig struct {
 
 func NewConfig(mode SnapshotMode) (*Config, error) {
 	ret := &Config{
-		&EthConfig{},
+		&EthDBConfig{},
 		&DBConfig{},
 		&FileConfig{},
 		&ServiceConfig{},
@@ -77,7 +77,7 @@ func NewConfig(mode SnapshotMode) (*Config, error) {
 
 func NewInPlaceSnapshotConfig() *Config {
 	ret := &Config{
-		&EthConfig{},
+		&EthDBConfig{},
 		&DBConfig{},
 		&FileConfig{},
 		&ServiceConfig{},
@@ -104,11 +104,14 @@ func (c *Config) Init(mode SnapshotMode) error {
 		ChainID:      viper.GetUint64(ETH_CHAIN_ID_TOML),
 	}
 
-	viper.BindEnv(LEVELDB_ANCIENT_TOML, LEVELDB_ANCIENT)
-	viper.BindEnv(LEVELDB_PATH_TOML, LEVELDB_PATH)
+	viper.BindEnv(ETHDB_ANCIENT_TOML, ETHDB_ANCIENT)
+	viper.BindEnv(ETHDB_PATH_TOML, ETHDB_PATH)
 
-	c.Eth.AncientDBPath = viper.GetString(LEVELDB_ANCIENT_TOML)
-	c.Eth.LevelDBPath = viper.GetString(LEVELDB_PATH_TOML)
+	c.Eth.DBPath = viper.GetString(ETHDB_PATH_TOML)
+	c.Eth.AncientDBPath = viper.GetString(ETHDB_ANCIENT_TOML)
+	if len(c.Eth.AncientDBPath) == 0 {
+		c.Eth.AncientDBPath = c.Eth.DBPath + "/ancient"
+	}
 
 	switch mode {
 	case FileSnapshot:

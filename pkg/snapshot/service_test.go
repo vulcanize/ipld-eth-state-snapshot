@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"math/rand"
 	"path/filepath"
-	"sort"
 	"testing"
 	"time"
 
-	"github.com/cerc-io/eth-testing/chaindata"
+	"github.com/cerc-io/eth-testing/chains"
 	"github.com/cerc-io/plugeth-statediff/indexer/models"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
@@ -20,6 +19,8 @@ import (
 )
 
 var (
+	rng = rand.New(rand.NewSource(time.Now().UnixNano()))
+
 	// Note: block 1 doesn't have storage nodes. TODO: add fixtures with storage nodes
 	// chainAblock1StateKeys = sliceToSet(fixture.ChainA_Block1_StateNodeLeafKeys)
 	chainAblock1IpldCids = sliceToSet(fixture.ChainA_Block1_IpldCids)
@@ -32,14 +33,10 @@ type selectiveData struct {
 	StorageNodes map[string]map[string]*models.StorageNodeModel
 }
 
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
-func testConfig(leveldbpath, ancientdbpath string) *Config {
+func testConfig(ethdbpath, ancientdbpath string) *Config {
 	return &Config{
-		Eth: &EthConfig{
-			LevelDBPath:   leveldbpath,
+		Eth: &EthDBConfig{
+			DBPath:        ethdbpath,
 			AncientDBPath: ancientdbpath,
 			NodeInfo:      DefaultNodeInfo,
 		},
@@ -130,8 +127,7 @@ func verify_chainAblock1(t *testing.T, data mocks.IndexerData) {
 		stateKey := common.BytesToHash(stateNode.AccountWrapper.LeafKey).String()
 		indexedStateKeys = append(indexedStateKeys, stateKey)
 	}
-	sort.Slice(indexedStateKeys, func(i, j int) bool { return indexedStateKeys[i] < indexedStateKeys[j] })
-	require.Equal(t, fixture.ChainA_Block1_StateNodeLeafKeys, indexedStateKeys)
+	require.ElementsMatch(t, fixture.ChainA_Block1_StateNodeLeafKeys, indexedStateKeys)
 
 	ipldCids := make(map[string]struct{})
 	for _, ipld := range data.IPLDs {
@@ -209,10 +205,10 @@ func (expected selectiveData) verify(t *testing.T, data mocks.IndexerData) {
 	}
 }
 
-func doSnapshot(t *testing.T, chain *chaindata.Paths, params SnapshotParams) mocks.IndexerData {
+func doSnapshot(t *testing.T, chain *chains.Paths, params SnapshotParams) mocks.IndexerData {
 	chainDataPath, ancientDataPath := chain.ChainData, chain.Ancient
 	config := testConfig(chainDataPath, ancientDataPath)
-	edb, err := NewLevelDB(config.Eth)
+	edb, err := NewEthDB(config.Eth)
 	require.NoError(t, err)
 	defer edb.Close()
 
@@ -228,13 +224,13 @@ func doSnapshot(t *testing.T, chain *chaindata.Paths, params SnapshotParams) moc
 
 func doSnapshotWithRecovery(
 	t *testing.T,
-	chain *chaindata.Paths,
+	chain *chains.Paths,
 	params SnapshotParams,
 	failAfter uint,
 ) mocks.IndexerData {
 	chainDataPath, ancientDataPath := chain.ChainData, chain.Ancient
 	config := testConfig(chainDataPath, ancientDataPath)
-	edb, err := NewLevelDB(config.Eth)
+	edb, err := NewEthDB(config.Eth)
 	require.NoError(t, err)
 	defer edb.Close()
 

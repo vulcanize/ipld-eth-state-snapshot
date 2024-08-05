@@ -1,6 +1,6 @@
 # ipld-eth-state-snapshot
 
-> Tool for extracting the entire Ethereum state at a particular block height from leveldb into Postgres-backed IPFS
+> Tool for extracting the entire Ethereum state at a particular block height from a cold database into Postgres-backed IPFS
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/vulcanize/ipld-eth-state-snapshot)](https://goreportcard.com/report/github.com/vulcanize/ipld-eth-state-snapshot)
 
@@ -20,15 +20,15 @@ Config format:
 [snapshot]
     mode         = "file"           # indicates output mode <postgres | file>
     workers      = 4                # degree of concurrency: the state trie is subdivided into sections that are traversed and processed concurrently
-    blockHeight  = -1               # blockheight to perform the snapshot at (-1 indicates to use the latest blockheight found in leveldb)
+    blockHeight  = -1               # blockheight to perform the snapshot at (-1 indicates to use the latest blockheight found in ethdb)
     recoveryFile = "recovery_file"  # specifies a file to output recovery information on error or premature closure
     accounts = []                   # list of accounts (addresses) to take the snapshot for # SNAPSHOT_ACCOUNTS
 
-[leveldb]
-    # path to geth leveldb
-    path    = "/Users/user/Library/Ethereum/geth/chaindata"         # LEVELDB_PATH
+[ethdb]
+    # path to geth ethdb
+    path    = "/Users/user/Library/Ethereum/geth/chaindata"         # ETHDB_PATH
     # path to geth ancient database
-    ancient = "/Users/user/Library/Ethereum/geth/chaindata/ancient" # LEVELDB_ANCIENT
+    ancient = "/Users/user/Library/Ethereum/geth/chaindata/ancient" # ETHDB_ANCIENT
 
 [database]
     # when operating in 'postgres' output mode
@@ -66,14 +66,14 @@ Config format:
 ```
 
 > **Note:** previous versions of this service used different variable names. To update, change the following:
-> * `LVL_DB_PATH` => `LEVELDB_PATH`
-> * `ANCIENT_DB_PATH` => `LEVELDB_ANCIENT`
+> * `LVL_DB_PATH`, `LEVELDB_PATH` => `ETHDB_PATH`
+> * `ANCIENT_DB_PATH`, `LEVELDB_ANCIENT` => `ETHDB_ANCIENT`
 > * `LOGRUS_LEVEL`, `LOGRUS_FILE` => `LOG_LEVEL`, `LOG_FILE`, etc.
 
 
 ## Usage
 
-* For state snapshot from LevelDB:
+* For state snapshot from EthDB:
 
     ```bash
     ./ipld-eth-state-snapshot stateSnapshot --config={path to toml config file}
